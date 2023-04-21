@@ -1,0 +1,8 @@
+**/*.yaml
+
+**/.pulumi
+**/pulumi-backend
+
+**/*private-key
+
+app
