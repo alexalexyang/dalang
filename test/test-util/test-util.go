@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// The results of this function can be used by multiple functions
 func GetPulumiStackArgs(stackName string) []auto.LocalWorkspaceOption {
 
 	cwd, err := util.GetCwd()
