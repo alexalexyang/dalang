@@ -16,12 +16,14 @@ import (
 )
 
 var projectName = "test-project"
-var stackName = "test"
-var opts = testUtil.GetPulumiStackArgs(stackName)
 
 func TestCreatePulumiSSHKeys(t *testing.T) {
+	t.Parallel()
 
 	ctx := context.Background()
+
+	var stackName = "testCreateSSHKeys"
+	var opts = testUtil.GetPulumiStackArgs(stackName)
 
 	deployFunc := func(ctx *pulumi.Context) error {
 		_, err := CreateSSHKey(ctx)
@@ -62,8 +64,12 @@ func TestCreatePulumiSSHKeys(t *testing.T) {
 }
 
 func TestUploadSSHKey(t *testing.T) {
+	t.Parallel()
 
 	ctx := context.Background()
+
+	var stackName = "testUploadSSHKey"
+	var opts = testUtil.GetPulumiStackArgs(stackName)
 
 	deployFunc := func(ctx *pulumi.Context) error {
 		sshKey, err := CreateSSHKey(ctx)
