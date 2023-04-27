@@ -1,23 +1,27 @@
 package deployHetznerServer
 
 import (
+	"dalang/config"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+
+	// "github.com/pulumi/pulumi-random/sdk/v4/go/random"
 
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-type SSHKey struct {
+type SSHKeyPair struct {
 	Public  pulumi.StringOutput
 	Private pulumi.StringOutput
 	Name    pulumi.StringOutput
 }
 
 // Generate random SSH key
-func CreateSSHKey(ctx *pulumi.Context) (*SSHKey, error) {
+func CreateSSHKey(ctx *pulumi.Context) (*SSHKeyPair, error) {
 	log.Println("Generating SSH key")
 	newkeys, err := tls.NewPrivateKey(ctx, "private-key", &tls.PrivateKeyArgs{
 		Algorithm:  pulumi.String("ECDSA"),
@@ -28,15 +32,15 @@ func CreateSSHKey(ctx *pulumi.Context) (*SSHKey, error) {
 		return nil, err
 	}
 
-	key := SSHKey{
+	keyPair := SSHKeyPair{
 		Public:  newkeys.PublicKeyOpenssh,
 		Private: newkeys.PrivateKeyOpenssh,
 	}
 
-	log.Println("SSH key generated: ", key.Public, " ", key.Private)
+	log.Println("SSH key generated: ", keyPair.Public, " ", keyPair.Private)
 
 	if os.Getenv("GO_ENV") == "development" {
-		_ = key.Private.ApplyT(func(key string) string {
+		_ = keyPair.Private.ApplyT(func(key string) string {
 			wd, _ := os.Getwd()
 			_ = os.WriteFile(filepath.Join(wd, "hetzner-private-key"), []byte(key), 0644)
 
@@ -45,21 +49,21 @@ func CreateSSHKey(ctx *pulumi.Context) (*SSHKey, error) {
 	}
 
 	// get identifier from the middle of the public key
-	key.Name = key.Public.ApplyT(func(pkey string) string {
+	keyPair.Name = keyPair.Public.ApplyT(func(pkey string) string {
 		middle := int(len(pkey) / 2)
 
 		return "pulumi-key-" + pkey[middle-4:middle+4]
 	}).(pulumi.StringOutput)
 
-	ctx.Export("keyName", key.Name)
-	ctx.Export("publicKey", key.Public)
+	ctx.Export("keyName", keyPair.Name)
+	ctx.Export("publicKey", keyPair.Public)
 
-	log.Println("SSH key name: ", key.Name)
+	log.Println("SSH key name: ", keyPair.Name)
 
-	return &key, nil
+	return &keyPair, nil
 }
 
-func UploadSSHKey(ctx *pulumi.Context, key *SSHKey) (*hcloud.SshKey, error) {
+func UploadSSHKey(ctx *pulumi.Context, key *SSHKeyPair) (*hcloud.SshKey, error) {
 	log.Println("Uploading SSH key to Hetzner")
 
 	sshKey, err := hcloud.NewSshKey(ctx, "sshkey", &hcloud.SshKeyArgs{
@@ -75,4 +79,41 @@ func UploadSSHKey(ctx *pulumi.Context, key *SSHKey) (*hcloud.SshKey, error) {
 	ctx.Export("publicKeyRes", key.Public)
 
 	return sshKey, nil
+}
+
+// Originally used to generate random names for Hetzner servers
+// func createRandomName(ctx *pulumi.Context, name string, length int, prefix string) (*pulumi.StringOutput, error) {
+// 	rawStr, err := random.NewRandomString(ctx, name, &random.RandomStringArgs{
+// 		Lower:   pulumi.Bool(true),
+// 		Upper:   pulumi.Bool(false),
+// 		Number:  pulumi.Bool(true),
+// 		Special: pulumi.Bool(false),
+// 		Length:  pulumi.Int(length),
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	str := rawStr.Result.ApplyT(func(str string) string {
+// 		return prefix + str
+// 	}).(pulumi.StringOutput)
+// 	return &str, nil
+// }
+
+func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*hcloud.Server, error) {
+
+	server, err := hcloud.NewServer(ctx, config.Config.ProjectName, &hcloud.ServerArgs{
+		Name:       pulumi.String(fmt.Sprintf("%s-server-%d", config.Config.ProjectName, serverNum)),
+		ServerType: pulumi.String(config.HetznerConfig.ServerType),
+		Image:      pulumi.String(config.HetznerConfig.OsImage),
+		Location:   pulumi.String(config.HetznerConfig.ServerLocation),
+		SshKeys:    pulumi.StringArray{sshKey.ID()},
+	})
+	if err != nil {
+		log.Println("Error creating server: ", err)
+		return nil, err
+	}
+
+	ctx.Export(fmt.Sprintf("%s-server-%d-name", config.Config.ProjectName, serverNum), server.Name)
+
+	return server, nil
 }

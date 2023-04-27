@@ -13,6 +13,7 @@ I want to set up a k8s cluster with:
 
 - Monitoring and logging
   - Fluent bit and/or FluentD
+  - Prometheus
 
 - CI/CD
   - FluxCD
@@ -59,7 +60,6 @@ hcloudToken: abcde12345
 - Install Rancher
 
 - Delete Pulumi?
-
 
 
 ## Notes

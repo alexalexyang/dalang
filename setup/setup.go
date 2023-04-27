@@ -14,6 +14,8 @@ func init() {
 	// Must be called before getting Pulumi
 	config.SetConfig()
 
+	config.SetHetznerConfig()
+
 	// -- Get Pulumi --
 	getPulumi.GetPulumi()
 	getPulumi.GetPulumiWorkspaceBackendDir()

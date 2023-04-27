@@ -2,6 +2,7 @@ package deployHetznerServer
 
 import (
 	"context"
+	"dalang/config"
 	_ "dalang/setup"
 	testUtil "dalang/test/test-util"
 	"fmt"
@@ -106,6 +107,67 @@ func TestUploadSSHKey(t *testing.T) {
 
 	assert.Equal(t, res.Outputs["keyName"].Value, res.Outputs["keyNameRes"].Value)
 	assert.Equal(t, res.Outputs["publicKey"].Value, res.Outputs["publicKeyRes"].Value)
+
+	// -- pulumi destroy --
+
+	dRes, _ := testUtil.DestroyStack(t, ctx, stack)
+
+	assert.Equal(t, "destroy", dRes.Summary.Kind)
+	assert.Equal(t, "succeeded", dRes.Summary.Result)
+}
+
+func TestDeployOneHetznerServer(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	var stackName = "testDeployOneHetznerServer"
+	var opts = testUtil.GetPulumiStackArgs(stackName)
+
+	deployFunc := func(ctx *pulumi.Context) error {
+		sshKeyPair, err := CreateSSHKey(ctx)
+		if err != nil {
+			t.Log("Error with DeployNetworkFunc ,", err)
+			return err
+		}
+
+		sshKey, err := UploadSSHKey(ctx, sshKeyPair)
+
+		if err != nil {
+			t.Log("Error with UploadSSHKey ,", err)
+			return err
+		}
+
+		_, err = DeployServer(ctx, sshKey, 1)
+		if err != nil {
+			t.Log("Error with DeployNetworkFunc ,", err)
+			return err
+		}
+
+		return nil
+	}
+
+	log.Println("Creating or selecting stack: ", stackName)
+
+	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
+	if err != nil {
+		t.Fatal("Error with UpsertStackInlineSource ,", err)
+	}
+
+	// -- remove pulumi stack --
+	defer testUtil.RemoveStack(t, ctx, stack)
+
+	// -- pulumi up --
+	res, _ := testUtil.UpStack(t, ctx, stack)
+
+	assert.Equal(t, "update", res.Summary.Kind)
+	assert.Equal(t, "succeeded", res.Summary.Result)
+
+	expectedServerName := fmt.Sprintf("%s-server-%d", config.Config.ProjectName, 1)
+	serverNameKey := fmt.Sprintf("%s-server-%d-name", config.Config.ProjectName, 1)
+	serverName := fmt.Sprintf("%v", res.Outputs[serverNameKey].Value)
+
+	assert.Equal(t, expectedServerName, serverName)
 
 	// -- pulumi destroy --
 

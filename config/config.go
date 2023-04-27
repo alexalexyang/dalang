@@ -19,6 +19,7 @@ var configYaml []byte
 type configStruct struct {
 	ProjectRootDir   string
 	PulumiReleaseUrl string `yaml:"pulumiReleaseUrl"`
+	ProjectName      string `yaml:"projectName"`
 }
 
 var Config = configStruct{}
@@ -36,14 +37,14 @@ func SetSecrets() {
 	util.IfFatalErr(err)
 
 	if secrets.HcloudToken == "" {
-		log.Fatal("Not found: Hetzner Cloud token")
+		log.Println("Not found: Hetzner Cloud token")
+	} else {
+		log.Println("Found: Hetzner Cloud token")
+
+		// -- Set HCLOUD token from secrets as env var --
+		err = os.Setenv("HCLOUD_TOKEN", secrets.HcloudToken)
+		util.IfFatalErr(err)
 	}
-
-	log.Println("Found: Hetzner Cloud token")
-
-	// -- Set HCLOUD token from secrets as env var --
-	err = os.Setenv("HCLOUD_TOKEN", secrets.HcloudToken)
-	util.IfFatalErr(err)
 }
 
 func SetConfig() {
@@ -56,6 +57,12 @@ func SetConfig() {
 	}
 
 	log.Println("Found: Pulumi release URL")
+
+	if Config.ProjectName == "" {
+		log.Fatal("Not found: Project name")
+	}
+
+	log.Println("Found: Pulumi name")
 
 	projRootDir, err := util.GetProjectRootDir()
 	util.IfFatalErr(err)
