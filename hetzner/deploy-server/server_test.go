@@ -11,6 +11,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
@@ -138,11 +139,20 @@ func TestDeployOneHetznerServer(t *testing.T) {
 			return err
 		}
 
-		_, err = DeployServer(ctx, sshKey, 1)
+		server, err := DeployServer(ctx, sshKey, 1)
 		if err != nil {
 			t.Log("Error with DeployNetworkFunc ,", err)
 			return err
 		}
+
+		connectInfo := remote.ConnectionArgs{
+			Host:       server.Ipv4Address,
+			Port:       pulumi.Float64(22),
+			User:       pulumi.String("root"),
+			PrivateKey: sshKeyPair.Private,
+		}
+
+		ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1), connectInfo)
 
 		return nil
 	}
@@ -163,11 +173,13 @@ func TestDeployOneHetznerServer(t *testing.T) {
 	assert.Equal(t, "update", res.Summary.Kind)
 	assert.Equal(t, "succeeded", res.Summary.Result)
 
-	expectedServerName := fmt.Sprintf("%s-server-%d", config.Config.ProjectName, 1)
-	serverNameKey := fmt.Sprintf("%s-server-%d-name", config.Config.ProjectName, 1)
-	serverName := fmt.Sprintf("%v", res.Outputs[serverNameKey].Value)
+	serverConnectInfoKey := fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1)
+	serverConnectInfo := res.Outputs[serverConnectInfoKey].Value.(map[string]interface{})
 
-	assert.Equal(t, expectedServerName, serverName)
+	assert.NotEmpty(t, serverConnectInfo["host"])
+	assert.NotEmpty(t, serverConnectInfo["port"])
+	assert.NotEmpty(t, serverConnectInfo["privateKey"])
+	assert.Equal(t, serverConnectInfo["user"], "root")
 
 	// -- pulumi destroy --
 

@@ -3,6 +3,8 @@ module dalang
 go 1.20
 
 require (
+	github.com/matoous/go-nanoid v1.5.0
+	github.com/pulumi/pulumi-command/sdk v0.7.2
 	github.com/pulumi/pulumi-hcloud/sdk v1.11.0
 	github.com/pulumi/pulumi-tls/sdk/v4 v4.10.0
 	github.com/pulumi/pulumi/sdk/v3 v3.64.0

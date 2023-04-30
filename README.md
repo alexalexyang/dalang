@@ -22,6 +22,9 @@ I want to set up a k8s cluster with:
   - Keycloak?
   - My other apps
 
+- Infrastructure orchestrator
+  - [Crossplane](https://www.crossplane.io/)
+
 
 ## Method
 

@@ -7,8 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	// "github.com/pulumi/pulumi-random/sdk/v4/go/random"
-
+	"github.com/matoous/go-nanoid"
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -81,28 +80,18 @@ func UploadSSHKey(ctx *pulumi.Context, key *SSHKeyPair) (*hcloud.SshKey, error) 
 	return sshKey, nil
 }
 
-// Originally used to generate random names for Hetzner servers
-// func createRandomName(ctx *pulumi.Context, name string, length int, prefix string) (*pulumi.StringOutput, error) {
-// 	rawStr, err := random.NewRandomString(ctx, name, &random.RandomStringArgs{
-// 		Lower:   pulumi.Bool(true),
-// 		Upper:   pulumi.Bool(false),
-// 		Number:  pulumi.Bool(true),
-// 		Special: pulumi.Bool(false),
-// 		Length:  pulumi.Int(length),
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	str := rawStr.Result.ApplyT(func(str string) string {
-// 		return prefix + str
-// 	}).(pulumi.StringOutput)
-// 	return &str, nil
-// }
-
 func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*hcloud.Server, error) {
 
+	id, err := gonanoid.ID(12)
+	if err != nil {
+		log.Println("Error generating random alphanumeric characters: ", err)
+		return nil, err
+	}
+
+	log.Println("randomAlphNumeric: ", id)
+
 	server, err := hcloud.NewServer(ctx, config.Config.ProjectName, &hcloud.ServerArgs{
-		Name:       pulumi.String(fmt.Sprintf("%s-server-%d", config.Config.ProjectName, serverNum)),
+		Name:       pulumi.String(fmt.Sprintf("%s-server-%d-%s", config.Config.ProjectName, serverNum, id)),
 		ServerType: pulumi.String(config.HetznerConfig.ServerType),
 		Image:      pulumi.String(config.HetznerConfig.OsImage),
 		Location:   pulumi.String(config.HetznerConfig.ServerLocation),
@@ -112,8 +101,6 @@ func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*h
 		log.Println("Error creating server: ", err)
 		return nil, err
 	}
-
-	ctx.Export(fmt.Sprintf("%s-server-%d-name", config.Config.ProjectName, serverNum), server.Name)
 
 	return server, nil
 }

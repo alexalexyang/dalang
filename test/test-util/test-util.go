@@ -2,11 +2,12 @@ package testUtil
 
 import (
 	"context"
-	"dalang/util"
+	"dalang/config"
+	// "dalang/util"
 	"fmt"
 	"log"
 	"os"
-	"path"
+	// "path"
 	"path/filepath"
 	"testing"
 
@@ -18,14 +19,16 @@ import (
 // The results of this function can be used by multiple functions
 func GetPulumiStackArgs(stackName string) []auto.LocalWorkspaceOption {
 
-	cwd, err := util.GetCwd()
-	if err != nil {
-		log.Fatal("Cannot get CWD: ", err)
-	}
+	// cwd, err := util.GetCwd()
+	// if err != nil {
+	// 	log.Fatal("Cannot get CWD: ", err)
+	// }
 
-	packageDir := path.Dir(*cwd)
-	projDir := path.Dir(packageDir)
-	workspaceBackendPath := filepath.Join(projDir, "pulumi-backend")
+	// log.Println("CWD: ", *cwd)
+	// packageDir := path.Dir(*cwd)
+	// log.Println("Package dir: ", packageDir)
+	// projDir := path.Dir(packageDir)
+	workspaceBackendPath := filepath.Join(config.Config.ProjectRootDir, "pulumi-backend")
 	log.Println("Workspace backend path: ", workspaceBackendPath)
 
 	// Specify a local backend instead of using the service.
