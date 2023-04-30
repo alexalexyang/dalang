@@ -1,5 +1,7 @@
 package test
 
+// This just runs the init function in setup/setup.go
+
 import (
 	_ "dalang/setup"
 
@@ -8,11 +10,7 @@ import (
 	"testing"
 )
 
-func setup() {
-}
-
 func TestMain(m *testing.M) {
-	setup()
 	code := m.Run()
 	os.Exit(code)
 }

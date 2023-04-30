@@ -17,8 +17,8 @@ func init() {
 	config.SetHetznerConfig()
 
 	// -- Get Pulumi --
-	getPulumi.GetPulumi()
 	getPulumi.GetPulumiWorkspaceBackendDir()
+	getPulumi.GetPulumi()
 
 	log.Println("Environment set up")
 }

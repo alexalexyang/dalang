@@ -82,7 +82,7 @@ func UploadSSHKey(ctx *pulumi.Context, key *SSHKeyPair) (*hcloud.SshKey, error) 
 
 func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*hcloud.Server, error) {
 
-	id, err := gonanoid.ID(12)
+	id, err := gonanoid.Generate("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-", 12)
 	if err != nil {
 		log.Println("Error generating random alphanumeric characters: ", err)
 		return nil, err
