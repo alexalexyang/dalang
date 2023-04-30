@@ -25,7 +25,7 @@ func TestCreateHetznerNetwork(t *testing.T) {
 	deployFunc := func(ctx *pulumi.Context) error {
 		_, err := DeployNetworkFunc(ctx, 1)
 		if err != nil {
-			t.Log("Error with DeployNetworkFunc ,", err)
+			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
@@ -36,7 +36,7 @@ func TestCreateHetznerNetwork(t *testing.T) {
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
-		t.Fatal("Error with UpsertStackInlineSource ,", err)
+		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}
 
 	// -- remove pulumi stack --

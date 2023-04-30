@@ -44,6 +44,10 @@ config/secrets.yaml:
 hcloudToken: abcde12345
 ```
 
+## Optional
+
+`GO_ENV` environment variable: if set to `development`, will write the private key to file so we can manually log into the deployed server.
+
 
 ## Steps
 

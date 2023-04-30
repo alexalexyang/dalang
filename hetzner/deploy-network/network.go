@@ -77,7 +77,7 @@ func CreateNetwork(runFunc runFunc, numTimes int, destroy bool) (*auto.Stack, *a
 	log.Println("Creating or selecting stack: ", stackName)
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, project, secretsProvider, stackSettings, envvars, workdir)
 	if err != nil {
-		log.Println("Error with UpsertStackInlineSource ,", err)
+		log.Println("Error with UpsertStackInlineSource: ", err)
 		return nil, nil, err
 	}
 

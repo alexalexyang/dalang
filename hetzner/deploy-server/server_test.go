@@ -30,7 +30,7 @@ func TestCreatePulumiSSHKeys(t *testing.T) {
 	deployFunc := func(ctx *pulumi.Context) error {
 		_, err := CreateSSHKey(ctx)
 		if err != nil {
-			t.Log("Error with DeployNetworkFunc ,", err)
+			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
@@ -41,7 +41,7 @@ func TestCreatePulumiSSHKeys(t *testing.T) {
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
-		t.Fatal("Error with UpsertStackInlineSource ,", err)
+		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}
 
 	// -- remove pulumi stack --
@@ -76,14 +76,14 @@ func TestUploadSSHKey(t *testing.T) {
 	deployFunc := func(ctx *pulumi.Context) error {
 		sshKey, err := CreateSSHKey(ctx)
 		if err != nil {
-			t.Log("Error with DeployNetworkFunc ,", err)
+			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
 		_, err = UploadSSHKey(ctx, sshKey)
 
 		if err != nil {
-			t.Log("Error with UploadSSHKey ,", err)
+			t.Log("Error with UploadSSHKey: ", err)
 			return err
 		}
 
@@ -94,7 +94,7 @@ func TestUploadSSHKey(t *testing.T) {
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
-		t.Fatal("Error with UpsertStackInlineSource ,", err)
+		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}
 
 	// -- remove pulumi stack --
@@ -128,20 +128,20 @@ func TestDeployOneHetznerServer(t *testing.T) {
 	deployFunc := func(ctx *pulumi.Context) error {
 		sshKeyPair, err := CreateSSHKey(ctx)
 		if err != nil {
-			t.Log("Error with DeployNetworkFunc ,", err)
+			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
 		sshKey, err := UploadSSHKey(ctx, sshKeyPair)
 
 		if err != nil {
-			t.Log("Error with UploadSSHKey ,", err)
+			t.Log("Error with UploadSSHKey: ", err)
 			return err
 		}
 
 		server, err := DeployServer(ctx, sshKey, 1)
 		if err != nil {
-			t.Log("Error with DeployNetworkFunc ,", err)
+			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
@@ -161,7 +161,7 @@ func TestDeployOneHetznerServer(t *testing.T) {
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
-		t.Fatal("Error with UpsertStackInlineSource ,", err)
+		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}
 
 	// -- remove pulumi stack --
