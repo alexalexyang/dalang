@@ -1,34 +1,13 @@
 # Intro
 
-I want to set up a k8s cluster with:
+Let's build a full cloud platform using the Kubernetes ecosystem!
 
-- High availability and fault tolerance
-  - 3 nodes
-
-- Security
-  - RKE2
-  - HashiCorp Vault
-  - Static analysis
-  - SPIFFE
-
-- Monitoring and logging
-  - Fluent bit and/or FluentD
-  - Prometheus
-
-- CI/CD
-  - FluxCD
-
-- A few apps in it
-  - Keycloak?
-  - My other apps
-
-- Infrastructure orchestrator
-  - [Crossplane](https://www.crossplane.io/)
+[Checklist](checklist.md) tracks the stack and its statuses.
 
 
 ## Method
 
-Domain-driven design, but loosely for now.
+Domain-driven, but forgivingly.
 
 
 ## Required
@@ -44,29 +23,21 @@ config/secrets.yaml:
 hcloudToken: abcde12345
 ```
 
+config/hetzner.yaml:
+```
+serverName: "default-server-name"
+serverType: "cx11"
+serverLocation: "hel1"
+zone: "europe-north1"
+osImage: "ubuntu-22.04"
+```
+
+[Hetzner servers and pricing](https://docs.hetzner.com/cloud/servers/overview/#shared-vcpu)
+
+
 ## Optional
 
 `GO_ENV` environment variable: if set to `development`, will write the private key to file so we can manually log into the deployed server.
-
-
-## Steps
-
-- Install Pulumi
-
-- Create 1 server in Hetzner
-
-- Create multiple servers in Hetzner
-
-- Create a network in Hetzner
-  - Done. But not sure if needed. This was just an experiment.
-
-- Create a load balancer
-
-- Install RKE2
-
-- Install Rancher
-
-- Delete Pulumi?
 
 
 ## Notes
