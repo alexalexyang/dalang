@@ -8,6 +8,7 @@ import (
 	testUtil "dalang/test/test-util"
 	"os"
 	"os/exec"
+	"strings"
 
 	"fmt"
 	"log"
@@ -19,15 +20,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	// err := os.Setenv("GO_ENV", "development")
-	// if err != nil {
-	// 	log.Println("Error setting GO_ENV: ", err)
-	// }
+// func TestMain(m *testing.M) {
+// 	err := os.Setenv("GO_ENV", "development")
+// 	if err != nil {
+// 		log.Println("Error setting GO_ENV: ", err)
+// 	}
 
-	code := m.Run()
-	os.Exit(code)
-}
+// 	code := m.Run()
+// 	os.Exit(code)
+// }
 
 var projectName = "test-project"
 
@@ -101,14 +102,15 @@ func TestInstallRke2(t *testing.T) {
 	assert.NotEmpty(t, serverConnectInfo["privateKey"])
 	assert.Equal(t, serverConnectInfo["user"], "root")
 
-	rke2InstallStdOut := fmt.Sprintf("%s", res.Outputs["run-rke2-server-install-script-stdout"].Value)
-	t.Log("rke2InstallStdOut: ", rke2InstallStdOut)
+	isRke2ServerActive := fmt.Sprintf("%s", res.Outputs["is-rke2-server-active"].Value)
 
-	goEnv := os.Getenv("GO_ENV")
+	assert.Equal(t, "active", strings.TrimRight(isRke2ServerActive, "\n"))
 
-	if goEnv == "development" {
-		_ = exec.Command("sh", "-c", "chmod 600 hetzner-private-key")
-		t.Logf("SSH command: ssh-keygen -R %s && ssh -i rke2/hetzner-private-key root@%s", serverConnectInfo["host"], serverConnectInfo["host"])
+	if os.Getenv("GO_ENV") == "development" {
+		cmdRes := exec.Command("sh", "-c", "chmod 777 hetzner-private-key")
+		t.Log("cmdRes: ", cmdRes)
+
+		t.Logf("SSH command: ssh-keygen -R %s && ssh -o \"StrictHostKeyChecking no\" -i rke2/hetzner-private-key root@%s", serverConnectInfo["host"], serverConnectInfo["host"])
 	}
 
 	// -- pulumi destroy --

@@ -41,5 +41,16 @@ func InstallServer(ctx *pulumi.Context, connection *remote.ConnectionArgs, depen
 	ctx.Export("run-rke2-server-install-script-stdout", res2.Stdout)
 	ctx.Export("run-rke2-server-install-script-stderr", res2.Stderr)
 
-	return res2, nil
+	res3, err := remote.NewCommand(ctx, "is-rke2-server-active", &remote.CommandArgs{
+		Connection: connection,
+		Create:     pulumi.String("systemctl is-active rke2-server.service"),
+		Triggers:   pulumi.All(res2.Create, res2.Stdin),
+	}, pulumi.DependsOn([]pulumi.Resource{res2}), pulumi.DeleteBeforeReplace(true))
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.Export("is-rke2-server-active", res3.Stdout)
+
+	return res3, nil
 }
