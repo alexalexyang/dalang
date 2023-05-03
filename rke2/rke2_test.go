@@ -69,11 +69,19 @@ func TestInstallRke2(t *testing.T) {
 
 		ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1), connectInfo)
 
-		_, err = InstallServer(ctx, &connectInfo, []pulumi.Resource{server})
+		installServerRes, err := InstallRke2(ctx, &connectInfo, []pulumi.Resource{server})
 		if err != nil {
-			t.Log("Error Installing RKE2 server: ", err)
+			t.Log("Error installing RKE2 server: ", err)
 			return err
 		}
+
+		serverToken, err := GetRke2ServerToken(ctx, &connectInfo, installServerRes)
+		if err != nil {
+			t.Log("Error getting RKE2 server token: ", err)
+			return err
+		}
+
+		t.Log("serverToken: ", *serverToken)
 
 		return nil
 	}
@@ -105,6 +113,11 @@ func TestInstallRke2(t *testing.T) {
 	isRke2ServerActive := fmt.Sprintf("%s", res.Outputs["is-rke2-server-active"].Value)
 
 	assert.Equal(t, "active", strings.TrimRight(isRke2ServerActive, "\n"))
+
+	rke2RegistrationToken := fmt.Sprintf("%s", res.Outputs["rke2-registration-token"].Value)
+	t.Log("rke2RegistrationToken: ", rke2RegistrationToken)
+
+	assert.NotEmpty(t, rke2RegistrationToken)
 
 	if os.Getenv("GO_ENV") == "development" {
 		cmdRes := exec.Command("sh", "-c", "chmod 777 hetzner-private-key")

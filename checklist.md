@@ -31,7 +31,7 @@
 ### [RKE2](https://docs.rke2.io/)
 
 - RKE2 server
-  - [ ] Integration test
+  - [x] Integration test
   - [x] Install in server
 
 - RKE2 agent

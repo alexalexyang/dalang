@@ -24,15 +24,16 @@ hcloudToken: abcde12345
 ```
 
 config/hetzner.yaml:
-```
-serverName: "default-server-name"
-serverType: "cx11"
-serverLocation: "hel1"
-zone: "europe-north1"
-osImage: "ubuntu-22.04"
-```
+- ```
+  serverName: "default-server-name"
+  serverType: "cx11"
+  serverLocation: "hel1"
+  zone: "europe-north1"
+  osImage: "ubuntu-22.04"
+  ```
+- [Hetzner servers and pricing](https://docs.hetzner.com/cloud/servers/overview/#shared-vcpu)
+- [Minimum recommendation for RKE2](https://docs.rke2.io/install/requirements#hardware): CX21
 
-[Hetzner servers and pricing](https://docs.hetzner.com/cloud/servers/overview/#shared-vcpu)
 
 
 ## Optional
