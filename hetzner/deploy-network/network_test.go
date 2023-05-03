@@ -5,7 +5,6 @@ import (
 	_ "dalang/setup"
 	testUtil "dalang/test/test-util"
 
-	"log"
 	"testing"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
@@ -31,8 +30,6 @@ func TestCreateHetznerNetwork(t *testing.T) {
 
 		return nil
 	}
-
-	log.Println("Creating or selecting stack: ", stackName)
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {

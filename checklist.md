@@ -72,7 +72,7 @@
 
 ### High availability and fault tolerance
 
-[ ] 3 nodes
+- [ ] 3 nodes
 
 ## Sample deployments
 

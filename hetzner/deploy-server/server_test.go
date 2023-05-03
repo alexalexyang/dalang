@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"log"
 	"testing"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
@@ -36,8 +35,6 @@ func TestCreatePulumiSSHKeys(t *testing.T) {
 
 		return nil
 	}
-
-	log.Println("Creating or selecting stack: ", stackName)
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
@@ -89,8 +86,6 @@ func TestUploadSSHKey(t *testing.T) {
 
 		return nil
 	}
-
-	log.Println("Creating or selecting stack: ", stackName)
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
@@ -156,8 +151,6 @@ func TestDeployOneHetznerServer(t *testing.T) {
 
 		return nil
 	}
-
-	log.Println("Creating or selecting stack: ", stackName)
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {

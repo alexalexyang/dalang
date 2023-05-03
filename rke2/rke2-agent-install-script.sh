@@ -14,5 +14,5 @@ systemctl enable rke2-agent.service
 # server: https://<server>:9345
 # token: <token from server node>
 
-systemctl start rke2-agent.service
+# systemctl start rke2-agent.service
 

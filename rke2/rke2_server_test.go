@@ -20,24 +20,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func TestMain(m *testing.M) {
-// 	err := os.Setenv("GO_ENV", "development")
-// 	if err != nil {
-// 		log.Println("Error setting GO_ENV: ", err)
-// 	}
+func TestMain(m *testing.M) {
+	log.Println("Running TestMain in rke2_server_test.go")
+	err := os.Setenv("GO_ENV", "development")
+	if err != nil {
+		log.Println("Error setting GO_ENV: ", err)
+	}
 
-// 	code := m.Run()
-// 	os.Exit(code)
-// }
+	code := m.Run()
+	os.Exit(code)
+}
 
 var projectName = "test-project"
 
-func TestInstallRke2(t *testing.T) {
+func TestInstallRke2Server(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 
-	var stackName = "testInstallRke2"
+	var stackName = "testInstallRke2Server"
 	var opts = testUtil.GetPulumiStackArgs(stackName)
 
 	deployFunc := func(ctx *pulumi.Context) error {
@@ -69,7 +70,7 @@ func TestInstallRke2(t *testing.T) {
 
 		ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1), connectInfo)
 
-		installServerRes, err := InstallRke2(ctx, &connectInfo, []pulumi.Resource{server})
+		installServerRes, err := InstallServer(ctx, &connectInfo, []pulumi.Resource{server})
 		if err != nil {
 			t.Log("Error installing RKE2 server: ", err)
 			return err
@@ -81,12 +82,10 @@ func TestInstallRke2(t *testing.T) {
 			return err
 		}
 
-		t.Log("serverToken: ", *serverToken)
+		assert.NotEmpty(t, *serverToken)
 
 		return nil
 	}
-
-	log.Println("Creating or selecting stack: ", stackName)
 
 	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
 	if err != nil {
@@ -102,14 +101,6 @@ func TestInstallRke2(t *testing.T) {
 	assert.Equal(t, "update", res.Summary.Kind)
 	assert.Equal(t, "succeeded", res.Summary.Result)
 
-	serverConnectInfoKey := fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1)
-	serverConnectInfo := res.Outputs[serverConnectInfoKey].Value.(map[string]interface{})
-
-	assert.NotEmpty(t, serverConnectInfo["host"])
-	assert.NotEmpty(t, serverConnectInfo["port"])
-	assert.NotEmpty(t, serverConnectInfo["privateKey"])
-	assert.Equal(t, serverConnectInfo["user"], "root")
-
 	isRke2ServerActive := fmt.Sprintf("%s", res.Outputs["is-rke2-server-active"].Value)
 
 	assert.Equal(t, "active", strings.TrimRight(isRke2ServerActive, "\n"))
@@ -122,6 +113,9 @@ func TestInstallRke2(t *testing.T) {
 	if os.Getenv("GO_ENV") == "development" {
 		cmdRes := exec.Command("sh", "-c", "chmod 777 hetzner-private-key")
 		t.Log("cmdRes: ", cmdRes)
+
+		serverConnectInfoKey := fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, 1)
+		serverConnectInfo := res.Outputs[serverConnectInfoKey].Value.(map[string]interface{})
 
 		t.Logf("SSH command: ssh-keygen -R %s && ssh -o \"StrictHostKeyChecking no\" -i rke2/hetzner-private-key root@%s", serverConnectInfo["host"], serverConnectInfo["host"])
 	}

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/matoous/go-nanoid"
+	gonanoid "github.com/matoous/go-nanoid"
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -88,10 +88,12 @@ func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*h
 		return nil, err
 	}
 
-	log.Println("randomAlphNumeric: ", id)
+	serverName := fmt.Sprintf("%s-server-%d-%s", config.Config.ProjectName, serverNum, id)
 
-	server, err := hcloud.NewServer(ctx, config.Config.ProjectName, &hcloud.ServerArgs{
-		Name:       pulumi.String(fmt.Sprintf("%s-server-%d-%s", config.Config.ProjectName, serverNum, id)),
+	log.Println("Deploying server", serverName)
+
+	server, err := hcloud.NewServer(ctx, serverName, &hcloud.ServerArgs{
+		Name:       pulumi.String(serverName),
 		ServerType: pulumi.String(config.HetznerConfig.ServerType),
 		Image:      pulumi.String(config.HetznerConfig.OsImage),
 		Location:   pulumi.String(config.HetznerConfig.ServerLocation),
@@ -101,6 +103,8 @@ func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*h
 		log.Println("Error creating server: ", err)
 		return nil, err
 	}
+
+	log.Println("Server", serverName, "deployed")
 
 	return server, nil
 }
