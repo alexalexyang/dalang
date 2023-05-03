@@ -32,11 +32,11 @@
 
 - RKE2 server
   - [x] Integration test
-  - [x] Install in server
+  - [x] Install in remote host
 
 - RKE2 agent
-  - [ ] Tests
-  - [ ] Install in server
+  - [x] Tests
+  - [x] Install in remote host
 
 ## GUI
 

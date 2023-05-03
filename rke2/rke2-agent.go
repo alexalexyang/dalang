@@ -28,11 +28,10 @@ func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, depend
 		return nil, err
 	}
 
-	log.Println("Running RKE2 agent install script on remote host")
-
 	ctx.Export("copy-rke2-agent-install-script-stdout", copyScriptRes.Stdout)
 	ctx.Export("copy-rke2-agent-install-script-stderr", copyScriptRes.Stderr)
 
+	log.Println("Running RKE2 agent install script on remote host")
 	runScriptRes, err := remote.NewCommand(ctx, "run-rke2-agent-install-script", &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String(". /root/rke2-agent-install-script.sh"),
