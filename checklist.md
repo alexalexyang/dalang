@@ -12,8 +12,9 @@
 ### [Hetzner](https://www.hetzner.com/)
 
 - Server
-  - [x] Integration tests
-  - [x] Deploy multiple servers of same type
+  - [x] Integration tests, positive cases only
+  - [x] Deploy single server
+  - [x] Deploy multiple servers of same type with one SSH key
   - [x] SSH key
   - [ ] Disable root login
   - [ ] Close all unused ports
@@ -23,7 +24,7 @@
 
 - Network
   - Not sure if needed. Was an experiment.
-  - [x] Integration tests
+  - [x] Integration tests, positive cases only
   - [x] Deploy network
 
 ## Kubernetes distribution
@@ -31,11 +32,11 @@
 ### [RKE2](https://docs.rke2.io/)
 
 - RKE2 server
-  - [x] Integration test
+  - [x] Integration tests, positive cases only
   - [x] Install in remote host
 
 - RKE2 agent
-  - [x] Tests
+  - [x] Integration tests, positive cases only
   - [x] Install in remote host
 
 ## GUI

@@ -181,3 +181,61 @@ func TestDeployOneHetznerServer(t *testing.T) {
 	assert.Equal(t, "destroy", dRes.Summary.Kind)
 	assert.Equal(t, "succeeded", dRes.Summary.Result)
 }
+
+func TestMultipleHetznerServers(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	var stackName = "testDeployOneHetznerServer"
+	var opts = testUtil.GetPulumiStackArgs(stackName)
+
+	numServers := 2
+
+	deployFunc := func(ctx *pulumi.Context) error {
+		connectInfoSlice, err := DeployServers1SSHKey(ctx, numServers)
+		if err != nil {
+			t.Log("Error with DeployNetworkFunc: ", err)
+			return err
+		}
+
+		assert.Equal(t, len(connectInfoSlice), numServers)
+
+		for idx, info := range connectInfoSlice {
+			ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, idx+1), info)
+		}
+
+		return nil
+	}
+
+	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
+	if err != nil {
+		t.Fatal("Error with UpsertStackInlineSource: ", err)
+	}
+
+	// -- remove pulumi stack --
+	defer testUtil.RemoveStack(t, ctx, stack)
+
+	// -- pulumi up --
+	res, _ := testUtil.UpStack(t, ctx, stack)
+
+	assert.Equal(t, "update", res.Summary.Kind)
+	assert.Equal(t, "succeeded", res.Summary.Result)
+
+	for i := 1; i < numServers+1; i++ {
+		serverConnectInfoKey := fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, i)
+		serverConnectInfo := res.Outputs[serverConnectInfoKey].Value.(map[string]interface{})
+
+		assert.NotEmpty(t, serverConnectInfo["host"])
+		assert.NotEmpty(t, serverConnectInfo["port"])
+		assert.NotEmpty(t, serverConnectInfo["privateKey"])
+		assert.Equal(t, serverConnectInfo["user"], "root")
+	}
+
+	// -- pulumi destroy --
+
+	dRes, _ := testUtil.DestroyStack(t, ctx, stack)
+
+	assert.Equal(t, "destroy", dRes.Summary.Kind)
+	assert.Equal(t, "succeeded", dRes.Summary.Result)
+}

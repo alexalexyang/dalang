@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	gonanoid "github.com/matoous/go-nanoid"
+	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi-tls/sdk/v4/go/tls"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -107,4 +108,41 @@ func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*h
 	log.Println("Server", serverName, "deployed")
 
 	return server, nil
+}
+
+// Deploy multiple servers with a single SSH key
+func DeployServers1SSHKey(ctx *pulumi.Context, numServers int) ([]remote.ConnectionArgs, error) {
+
+	sshKeyPair, err := CreateSSHKey(ctx)
+	if err != nil {
+		log.Println("Error with DeployNetworkFunc: ", err)
+		return nil, err
+	}
+
+	sshKey, err := UploadSSHKey(ctx, sshKeyPair)
+	if err != nil {
+		log.Println("Error with UploadSSHKey: ", err)
+		return nil, err
+	}
+
+	connectInfoSlice := []remote.ConnectionArgs{}
+
+	for i := 1; i < numServers+1; i++ {
+		server, err := DeployServer(ctx, sshKey, i)
+		if err != nil {
+			log.Println("Error with DeployNetworkFunc: ", err)
+			return nil, err
+		}
+
+		connectInfo := remote.ConnectionArgs{
+			Host:       server.Ipv4Address,
+			Port:       pulumi.Float64(22),
+			User:       pulumi.String("root"),
+			PrivateKey: sshKeyPair.Private,
+		}
+
+		connectInfoSlice = append(connectInfoSlice, connectInfo)
+	}
+
+	return connectInfoSlice, nil
 }
