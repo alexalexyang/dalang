@@ -39,6 +39,9 @@
   - [x] Integration tests, positive cases only
   - [x] Install in remote host
 
+- Deployment test
+  - [ ] Integration tests, positive cases only
+
 ## GUI
 
 ### [Rancher](https://www.rancher.com/)

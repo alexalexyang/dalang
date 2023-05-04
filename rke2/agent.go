@@ -11,8 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//go:embed rke2-agent-install-script.sh
-var rke2AgentInstallScript string
+//go:embed agent-install-script.sh
+var agentInstallScript string
 
 // Installs RKE2 agent on remote host
 func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource) (pulumi.Resource, error) {
@@ -21,7 +21,7 @@ func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, depend
 	copyScriptRes, err := remote.NewCommand(ctx, "copy-rke2-agent-install-script", &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("cat > /root/rke2-agent-install-script.sh && chmod u+x /root/rke2-agent-install-script.sh"),
-		Stdin:      pulumi.String(rke2AgentInstallScript),
+		Stdin:      pulumi.String(agentInstallScript),
 		Delete:     pulumi.String("rm /root/rke2-agent-install-script.sh"),
 	}, pulumi.DeleteBeforeReplace(true), pulumi.DependsOn(dependsOn))
 	if err != nil {

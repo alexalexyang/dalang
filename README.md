@@ -4,6 +4,7 @@ Let's build a full cloud platform using the Kubernetes ecosystem!
 
 [Checklist](checklist.md) tracks the stack and its statuses.
 
+This is just for learning. If you really want to create your own cloud, you should probably try something like [Crossplane](https://www.crossplane.io/).
 
 ## Method
 

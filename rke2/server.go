@@ -10,8 +10,8 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-//go:embed rke2-server-install-script.sh
-var rke2ServerInstallScript string
+//go:embed server-install-script.sh
+var serverInstallScript string
 
 // Installs RKE2 server on remote host
 func InstallServer(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource) (*remote.Command, error) {
@@ -20,7 +20,7 @@ func InstallServer(ctx *pulumi.Context, connection *remote.ConnectionArgs, depen
 	copyScriptRes, err := remote.NewCommand(ctx, "copy-rke2-server-install-script", &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("cat > /root/rke2-server-install-script.sh && chmod u+x /root/rke2-server-install-script.sh"),
-		Stdin:      pulumi.String(rke2ServerInstallScript),
+		Stdin:      pulumi.String(serverInstallScript),
 		Delete:     pulumi.String("rm /root/rke2-server-install-script.sh"),
 	}, pulumi.DeleteBeforeReplace(true), pulumi.DependsOn(dependsOn))
 	if err != nil {

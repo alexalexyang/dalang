@@ -187,7 +187,7 @@ func TestMultipleHetznerServers(t *testing.T) {
 
 	ctx := context.Background()
 
-	var stackName = "testDeployOneHetznerServer"
+	var stackName = "testMultipleHetznerServers"
 	var opts = testUtil.GetPulumiStackArgs(stackName)
 
 	numServers := 2
