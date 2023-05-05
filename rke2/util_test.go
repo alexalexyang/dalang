@@ -16,12 +16,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetKubeconfig(t *testing.T) {
+func TestGetKubeConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 
-	var stackName = "testGetKubeconfig"
+	var stackName = "testGetKubeConfig"
 	var opts = testUtil.GetPulumiStackArgs(stackName)
 
 	deployFunc := func(ctx *pulumi.Context) error {
@@ -59,7 +59,7 @@ func TestGetKubeconfig(t *testing.T) {
 			return err
 		}
 
-		kubeconfig, err := GetKubeconfig(ctx, &connectInfo, installServerRes)
+		kubeconfig, err := GetKubeConfig(ctx, &connectInfo, installServerRes)
 		if err != nil {
 			t.Log("Error getting kubeconfig: ", err)
 			return err
@@ -67,6 +67,22 @@ func TestGetKubeconfig(t *testing.T) {
 		t.Log("kubeconfig: ", *kubeconfig)
 
 		assert.NotEmpty(t, *kubeconfig)
+
+		serverChan := make(chan string)
+		server.Ipv4Address.ApplyT(func(ip string) string {
+			serverChan <- ip
+			return ip
+		})
+
+		serverIp := <-serverChan
+		close(serverChan)
+
+		t.Log("server ip: ", serverIp)
+		assert.NotEmpty(t, serverIp)
+
+		updatedKubeConfig := UpdateKubeConfigServerIP(*kubeconfig, serverIp)
+		t.Log("updated kubeconfig: ", updatedKubeConfig)
+		assert.NotEmpty(t, updatedKubeConfig)
 
 		return nil
 	}
