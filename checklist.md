@@ -39,6 +39,11 @@
   - [x] Integration tests, positive cases only
   - [x] Install in remote host
 
+- High availability
+  - [x] Integration tests, positive cases only
+  - [ ] Server
+  - [x] Agent
+
 - Deployment test
   - [ ] Integration tests, positive cases only
 

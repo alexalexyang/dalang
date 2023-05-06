@@ -92,7 +92,7 @@ func TestInstallRke2Agent(t *testing.T) {
 			return err
 		}
 
-		t.Log("Agent server deployed: ", agentHost)
+		t.Log("Agent server deployed")
 
 		agentConnectInfo := remote.ConnectionArgs{
 			Host:       agentHost.Ipv4Address,
@@ -120,19 +120,19 @@ func TestInstallRke2Agent(t *testing.T) {
 			t.Logf("SSH command: ssh-keygen -R %s && ssh -o \"StrictHostKeyChecking no\" -i rke2/hetzner-private-key root@%s", agentIp, agentIp)
 		}
 
-		runScriptRes, err := InstallAgent(ctx, &agentConnectInfo, []pulumi.Resource{agentHost})
+		runScriptRes, err := InstallAgent(ctx, agentIp, &agentConnectInfo, []pulumi.Resource{agentHost})
 		if err != nil {
 			t.Log("Error installing RKE2 agent: ", err)
 			return err
 		}
 
-		_, agentStatus, err := StartAgent(ctx, &agentConnectInfo, []pulumi.Resource{runScriptRes}, serverIp, *serverToken)
+		_, agentStatus, err := StartAgent(ctx, agentIp, &agentConnectInfo, []pulumi.Resource{runScriptRes}, serverIp, *serverToken)
 		if err != nil {
 			t.Log("Error starting RKE2 agent: ", err)
 			t.Fail()
 		}
 
-		t.Log("agentStatus: ", agentStatus)
+		t.Log("agentStatus: ", *agentStatus)
 
 		return nil
 	}

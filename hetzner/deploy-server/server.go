@@ -110,39 +110,49 @@ func DeployServer(ctx *pulumi.Context, sshKey *hcloud.SshKey, serverNum int) (*h
 	return server, nil
 }
 
+type Host struct {
+	Server      *hcloud.Server
+	ConnectArgs remote.ConnectionArgs
+}
+
 // Deploy multiple servers with a single SSH key
-func DeployServers1SSHKey(ctx *pulumi.Context, numServers int) ([]remote.ConnectionArgs, error) {
+func DeployServers1SSHKey(ctx *pulumi.Context, numServers int) ([]Host, *hcloud.SshKey, error) {
 
 	sshKeyPair, err := CreateSSHKey(ctx)
 	if err != nil {
 		log.Println("Error with DeployNetworkFunc: ", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	sshKey, err := UploadSSHKey(ctx, sshKeyPair)
 	if err != nil {
 		log.Println("Error with UploadSSHKey: ", err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	connectInfoSlice := []remote.ConnectionArgs{}
+	serverInfoSlice := []Host{}
 
 	for i := 1; i < numServers+1; i++ {
 		server, err := DeployServer(ctx, sshKey, i)
 		if err != nil {
 			log.Println("Error with DeployNetworkFunc: ", err)
-			return nil, err
+			return nil, nil, err
 		}
 
-		connectInfo := remote.ConnectionArgs{
+		connectArgs := remote.ConnectionArgs{
 			Host:       server.Ipv4Address,
 			Port:       pulumi.Float64(22),
 			User:       pulumi.String("root"),
 			PrivateKey: sshKeyPair.Private,
 		}
 
-		connectInfoSlice = append(connectInfoSlice, connectInfo)
+		serverInfo := Host{
+			Server:      server,
+			ConnectArgs: connectArgs,
+		}
+
+		serverInfoSlice = append(serverInfoSlice, serverInfo)
 	}
 
-	return connectInfoSlice, nil
+	return serverInfoSlice, sshKey, nil
 }

@@ -15,10 +15,10 @@ import (
 var agentInstallScript string
 
 // Installs RKE2 agent on remote host
-func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource) (pulumi.Resource, error) {
+func InstallAgent(ctx *pulumi.Context, ip string, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource) (pulumi.Resource, error) {
+	log.Println("Copying RKE2 agent install script to remote host: ", ip)
 
-	log.Println("Copying RKE2 agent install script to remote host")
-	copyScriptRes, err := remote.NewCommand(ctx, "copy-rke2-agent-install-script", &remote.CommandArgs{
+	copyScriptRes, err := remote.NewCommand(ctx, fmt.Sprintf("copy-rke2-agent-install-script-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("cat > /root/rke2-agent-install-script.sh && chmod u+x /root/rke2-agent-install-script.sh"),
 		Stdin:      pulumi.String(agentInstallScript),
@@ -32,7 +32,7 @@ func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, depend
 	ctx.Export("copy-rke2-agent-install-script-stderr", copyScriptRes.Stderr)
 
 	log.Println("Running RKE2 agent install script on remote host")
-	runScriptRes, err := remote.NewCommand(ctx, "run-rke2-agent-install-script", &remote.CommandArgs{
+	runScriptRes, err := remote.NewCommand(ctx, fmt.Sprintf("run-rke2-agent-install-script-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String(". /root/rke2-agent-install-script.sh"),
 		Triggers:   pulumi.All(copyScriptRes.Create, copyScriptRes.Stdin, copyScriptRes.Delete),
@@ -47,9 +47,10 @@ func InstallAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, depend
 	return runScriptRes, nil
 }
 
-func StartAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource, serverIp string, serverToken string) (pulumi.Resource, *string, error) {
+func StartAgent(ctx *pulumi.Context, ip string, connection *remote.ConnectionArgs, dependsOn []pulumi.Resource, serverIp string, serverToken string) (pulumi.Resource, *string, error) {
+	log.Println("Creating RKE2 agent config directory on remote host: ", ip)
 
-	mkconfigDir, err := remote.NewCommand(ctx, "make-agent-config-dir", &remote.CommandArgs{
+	mkconfigDir, err := remote.NewCommand(ctx, fmt.Sprintf("make-agent-config-dir-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("mkdir -p /etc/rancher/rke2/"),
 	}, pulumi.DependsOn(dependsOn), pulumi.DeleteBeforeReplace(true))
@@ -67,8 +68,6 @@ func StartAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsO
 		Token:  serverToken,
 	}
 
-	log.Println("Config struct: ", configStruct)
-
 	config, err := yaml.Marshal(configStruct)
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +75,7 @@ func StartAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsO
 
 	writeFileCmd := fmt.Sprintf("cat > /etc/rancher/rke2/config.yaml <<EOF\n%s\nEOF", string(config))
 
-	writeConfigFile, err := remote.NewCommand(ctx, "write-agent-config-file", &remote.CommandArgs{
+	writeConfigFile, err := remote.NewCommand(ctx, fmt.Sprintf("write-agent-config-file-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String(writeFileCmd),
 		Triggers:   pulumi.All(mkconfigDir.Create, mkconfigDir.Stdin),
@@ -87,7 +86,7 @@ func StartAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsO
 
 	log.Println("Starting RKE2 agent on remote host")
 
-	startAgent, err := remote.NewCommand(ctx, "start-rke2-agent", &remote.CommandArgs{
+	startAgent, err := remote.NewCommand(ctx, fmt.Sprintf("start-rke2-agent-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("systemctl start rke2-agent.service"),
 		Triggers:   pulumi.All(writeConfigFile.Create, writeConfigFile.Stdin),
@@ -98,7 +97,7 @@ func StartAgent(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsO
 
 	log.Println("Checking RKE2 agent status on remote host")
 
-	statusRes, err := remote.NewCommand(ctx, "is-rke2-agent-active", &remote.CommandArgs{
+	statusRes, err := remote.NewCommand(ctx, fmt.Sprintf("is-rke2-agent-active-%s", ip), &remote.CommandArgs{
 		Connection: connection,
 		Create:     pulumi.String("systemctl is-active rke2-agent.service"),
 		Triggers:   pulumi.All(startAgent.Create, startAgent.Stdin),

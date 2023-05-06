@@ -193,16 +193,16 @@ func TestMultipleHetznerServers(t *testing.T) {
 	numServers := 2
 
 	deployFunc := func(ctx *pulumi.Context) error {
-		connectInfoSlice, err := DeployServers1SSHKey(ctx, numServers)
+		serverInfoSlice, _, err := DeployServers1SSHKey(ctx, numServers)
 		if err != nil {
 			t.Log("Error with DeployNetworkFunc: ", err)
 			return err
 		}
 
-		assert.Equal(t, len(connectInfoSlice), numServers)
+		assert.Equal(t, len(serverInfoSlice), numServers)
 
-		for idx, info := range connectInfoSlice {
-			ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, idx+1), info)
+		for idx, serverInfo := range serverInfoSlice {
+			ctx.Export(fmt.Sprintf("%s-server-%d-connect-info", config.Config.ProjectName, idx+1), serverInfo.ConnectArgs)
 		}
 
 		return nil
