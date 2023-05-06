@@ -6,14 +6,14 @@ import (
 	hetzner "dalang/hetzner/deploy-server"
 	_ "dalang/setup"
 	testUtil "dalang/test/test-util"
+	_ "embed"
 	"fmt"
-
-	"testing"
-
 	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
+	"testing"
 )
 
 func TestGetKubeConfig(t *testing.T) {
@@ -107,4 +107,22 @@ func TestGetKubeConfig(t *testing.T) {
 
 	assert.Equal(t, "destroy", dRes.Summary.Kind)
 	assert.Equal(t, "succeeded", dRes.Summary.Result)
+}
+
+//go:embed sample-deployment.yaml
+var sampleDeploymentYaml string
+
+func TestConvertYamlToObj(t *testing.T) {
+	t.Parallel()
+
+	k8sObjType := appsv1.Deployment{}
+
+	deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &k8sObjType)
+	if err != nil {
+		t.Log("Error converting yaml to obj: ", err)
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "nginx:1.14.2", deploymentObj.Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "512Mi", deploymentObj.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 }
