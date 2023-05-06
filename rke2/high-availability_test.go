@@ -26,7 +26,7 @@ func TestHighAvailability(t *testing.T) {
 	numHosts := numServers + numAgents
 
 	deployFunc := func(ctx *pulumi.Context) error {
-		serverIp, serverToken, err := DeployHighAvailability(ctx, numServers, numAgents)
+		_, _, serverIp, serverToken, err := DeployHighAvailability(ctx, numServers, numAgents)
 		if err != nil {
 			t.Fatal("Error setting up high availability RKE2: ", err)
 		}

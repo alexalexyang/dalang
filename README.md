@@ -35,7 +35,9 @@ config/hetzner.yaml:
 - [Hetzner servers and pricing](https://docs.hetzner.com/cloud/servers/overview/#shared-vcpu)
 - [Minimum recommendation for RKE2](https://docs.rke2.io/install/requirements#hardware): CX21
 
-
+rke2/sample-deployment.yaml:
+- Used by rke2 `util_test.go` and `deployment_test.go`
+- The sample `nginx` one from the [Kubernetes page on deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) works
 
 ## Optional
 

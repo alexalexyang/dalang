@@ -45,7 +45,7 @@
   - [x] Agent
 
 - Deployment test
-  - [ ] Integration tests, positive cases only
+  - [x] Integration tests, positive cases only
 
 ## GUI
 

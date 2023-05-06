@@ -4,14 +4,15 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	appsv1 "k8s.io/api/apps/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"log"
-	"strings"
 )
 
 func GetKubeConfig(ctx *pulumi.Context, connection *remote.ConnectionArgs, dependsOn *remote.Command) (*string, error) {
@@ -42,6 +43,7 @@ func UpdateKubeConfigServerIP(kubeconfig string, serverIP string) string {
 	return strings.Replace(kubeconfig, "server: https://127.0.0.1:", fmt.Sprintf("server: https://%s:", serverIP), 1)
 }
 
+// Has no tests
 func GetClientSet(kubeconfig string) (*kubernetes.Clientset, error) {
 
 	config, err := clientcmd.RESTConfigFromKubeConfig([]byte(kubeconfig))

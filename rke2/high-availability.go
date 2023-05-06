@@ -8,21 +8,32 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-// Returns serverIp, serverToken, error
-func DeployHighAvailability(ctx *pulumi.Context, numServers int, numAgents int) (*string, *string, error) {
+// Returns:
+//
+// - remote command response for first RKE2 server host
+//
+// - first server host connection args
+//
+// - serverIp
+//
+// - serverToken
+//
+// - error
+func DeployHighAvailability(ctx *pulumi.Context, numServers int, numAgents int) (*remote.Command, *remote.ConnectionArgs, *string, *string, error) {
 
 	if numServers > 1 {
-		return nil, nil, fmt.Errorf("numServers must be 1 for now as I haven't implemented HA for servers yet")
+		return nil, nil, nil, nil, fmt.Errorf("numServers must be 1 for now as I haven't implemented HA for servers yet")
 	}
 
 	numHosts := numServers + numAgents
 	hostInfoSlice, _, err := hetzner.DeployServers1SSHKey(ctx, numHosts)
 	if err != nil {
 		log.Println("Error with DeployNetworkFunc: ", err)
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	for idx, hostInfo := range hostInfoSlice {
@@ -30,11 +41,12 @@ func DeployHighAvailability(ctx *pulumi.Context, numServers int, numAgents int) 
 	}
 
 	serverHostsSlice := hostInfoSlice[:numServers]
+	firstHostConnArgs := serverHostsSlice[0].ConnectArgs
 
-	serverIp, serverToken, err := setupServerHosts(ctx, serverHostsSlice, numServers)
+	firstHostRes, serverIp, serverToken, err := setupServerHosts(ctx, serverHostsSlice, numServers)
 	if err != nil {
 		log.Println("Error setting up hosts: ", err)
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	if os.Getenv("GO_ENV") == "development" {
@@ -46,33 +58,41 @@ func DeployHighAvailability(ctx *pulumi.Context, numServers int, numAgents int) 
 
 	if numAgents == 0 {
 		log.Println("numAgents is 0, no agents to set up")
-		return serverIp, serverToken, nil
+		return firstHostRes, &firstHostConnArgs, serverIp, serverToken, nil
 	}
 
 	agentHostsSlice := hostInfoSlice[numServers:]
 
 	setupAgentHosts(ctx, agentHostsSlice, numServers, *serverIp, serverToken)
 
-	return serverIp, serverToken, nil
+	return firstHostRes, &firstHostConnArgs, serverIp, serverToken, nil
 }
 
-// Returns serverIp, serverToken, error
-func setupServerHosts(ctx *pulumi.Context, hosts []hetzner.Host, numServers int) (*string, *string, error) {
+// Returns:
+//
+// - remote command response for first RKE2 server host
+//
+// - serverIp
+//
+// - serverToken
+//
+// - error
+func setupServerHosts(ctx *pulumi.Context, hosts []hetzner.Host, numServers int) (*remote.Command, *string, *string, error) {
 
 	log.Println("Setting up first host")
 
 	host1 := hosts[0]
 
-	installServerRes, err := InstallServer(ctx, &host1.ConnectArgs, []pulumi.Resource{host1.Server})
+	firstHostRes, err := InstallServer(ctx, &host1.ConnectArgs, []pulumi.Resource{host1.Server})
 	if err != nil {
 		log.Println("Error installing RKE2 server: ", err)
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	serverToken, err := GetRke2ServerToken(ctx, &host1.ConnectArgs, installServerRes)
+	serverToken, err := GetRke2ServerToken(ctx, &host1.ConnectArgs, firstHostRes)
 	if err != nil {
 		log.Println("Error getting RKE2 server token: ", err)
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	serverChan := make(chan string)
@@ -89,7 +109,7 @@ func setupServerHosts(ctx *pulumi.Context, hosts []hetzner.Host, numServers int)
 
 	if numServers == 1 {
 		log.Println("Only 1 server, no remaining hosts to set up")
-		return &serverIp, serverToken, nil
+		return firstHostRes, &serverIp, serverToken, nil
 	}
 
 	log.Println("Setting up remaining hosts")
@@ -105,7 +125,7 @@ func setupServerHosts(ctx *pulumi.Context, hosts []hetzner.Host, numServers int)
 		log.Println("Set up RKE2 server in host: ", host)
 	}
 
-	return &serverIp, serverToken, nil
+	return firstHostRes, &serverIp, serverToken, nil
 }
 
 func setupAgentHosts(ctx *pulumi.Context, hosts []hetzner.Host, numServers int, serverIp string, serverToken *string) error {
