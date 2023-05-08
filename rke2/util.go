@@ -9,7 +9,6 @@ import (
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/remote"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	appsv1 "k8s.io/api/apps/v1"
 	k8sYaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -61,7 +60,7 @@ func GetClientSet(kubeconfig string) (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-func ConvertYamlToObj(yamlString string, k8sObjType *appsv1.Deployment) (*appsv1.Deployment, error) {
+func ConvertYamlToObj(yamlString string, k8sObjType interface{}) (interface{}, error) {
 	decoder := k8sYaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(yamlString)), 1000)
 
 	if err := decoder.Decode(&k8sObjType); err != nil {

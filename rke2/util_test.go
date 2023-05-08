@@ -16,6 +16,26 @@ import (
 	"testing"
 )
 
+//go:embed deployment.sample.yaml
+var sampleDeploymentYaml string
+
+func TestConvertYamlToObj(t *testing.T) {
+	t.Parallel()
+
+	k8sObjType := appsv1.Deployment{}
+
+	deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &k8sObjType)
+	if err != nil {
+		t.Log("Error converting yaml to obj: ", err)
+		t.Fatal(err)
+	}
+
+	depObj := deploymentObj.(*appsv1.Deployment)
+
+	assert.Equal(t, "nginx:1.14.2", depObj.Spec.Template.Spec.Containers[0].Image)
+	assert.Equal(t, "512Mi", depObj.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
+}
+
 func TestGetKubeConfig(t *testing.T) {
 	t.Parallel()
 
@@ -107,22 +127,4 @@ func TestGetKubeConfig(t *testing.T) {
 
 	assert.Equal(t, "destroy", dRes.Summary.Kind)
 	assert.Equal(t, "succeeded", dRes.Summary.Result)
-}
-
-//go:embed sample-deployment.yaml
-var sampleDeploymentYaml string
-
-func TestConvertYamlToObj(t *testing.T) {
-	t.Parallel()
-
-	k8sObjType := appsv1.Deployment{}
-
-	deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &k8sObjType)
-	if err != nil {
-		t.Log("Error converting yaml to obj: ", err)
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, "nginx:1.14.2", deploymentObj.Spec.Template.Spec.Containers[0].Image)
-	assert.Equal(t, "512Mi", deploymentObj.Spec.Template.Spec.Containers[0].Resources.Limits.Memory().String())
 }

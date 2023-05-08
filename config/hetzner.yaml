@@ -1,0 +1,5 @@
+serverName: "default-server-name"
+serverType: cx21
+serverLocation: "hel1"
+zone: "europe-north1"
+osImage: "ubuntu-22.04"

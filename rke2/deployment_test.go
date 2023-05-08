@@ -7,12 +7,17 @@ import (
 	testUtil "dalang/test/test-util"
 	_ "embed"
 	"fmt"
+	"testing"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
-	"testing"
+	apiv1 "k8s.io/api/core/v1"
 )
+
+//go:embed service.sample.yaml
+var sampleServiceYaml string
 
 func TestK8sDeployment(t *testing.T) {
 	t.Parallel()
@@ -38,7 +43,6 @@ func TestK8sDeployment(t *testing.T) {
 			return err
 		}
 
-		t.Log("kubeconfig: ", *kubeconfigRaw)
 		assert.NotEmpty(t, *kubeconfigRaw)
 
 		kubeconfig := UpdateKubeConfigServerIP(*kubeconfigRaw, *serverIp)
@@ -49,19 +53,40 @@ func TestK8sDeployment(t *testing.T) {
 			return err
 		}
 
-		k8sObjType := appsv1.Deployment{}
+		depType := appsv1.Deployment{}
 
-		deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &k8sObjType)
+		deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &depType)
 		if err != nil {
 			t.Log("Error converting yaml to obj: ", err)
 			t.Fatal(err)
 		}
 
-		err = ApplyDeployment(clientset, deploymentObj)
+		depObj := deploymentObj.(*appsv1.Deployment)
+
+		err = ApplyDeployment(clientset, depObj)
 		if err != nil {
 			t.Log("Error applying deployment: ", err)
 			return err
 		}
+
+		assert.Nil(t, err)
+
+		svcType := apiv1.Service{}
+
+		serviceObj, err := ConvertYamlToObj(sampleServiceYaml, &svcType)
+		if err != nil {
+			t.Log("Error converting yaml to obj: ", err)
+			t.Fatal(err)
+		}
+
+		svcObj := serviceObj.(*apiv1.Service)
+
+		err = ApplyService(clientset, svcObj)
+		if err != nil {
+			t.Log("Error applying service: ", err)
+			return err
+		}
+
 		assert.Nil(t, err)
 
 		return nil
@@ -73,7 +98,7 @@ func TestK8sDeployment(t *testing.T) {
 	}
 
 	// -- remove pulumi stack --
-	// defer testUtil.RemoveStack(t, ctx, stack)
+	defer testUtil.RemoveStack(t, ctx, stack)
 
 	// -- pulumi up --
 	res, _ := testUtil.UpStack(t, ctx, stack)
@@ -93,8 +118,8 @@ func TestK8sDeployment(t *testing.T) {
 
 	// -- pulumi destroy --
 
-	// dRes, _ := testUtil.DestroyStack(t, ctx, stack)
+	dRes, _ := testUtil.DestroyStack(t, ctx, stack)
 
-	// assert.Equal(t, "destroy", dRes.Summary.Kind)
-	// assert.Equal(t, "succeeded", dRes.Summary.Result)
+	assert.Equal(t, "destroy", dRes.Summary.Kind)
+	assert.Equal(t, "succeeded", dRes.Summary.Result)
 }

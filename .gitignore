@@ -1,4 +1,4 @@
-**/*.yaml
+**/*secret*.yaml
 
 **/.pulumi
 **/pulumi-backend
