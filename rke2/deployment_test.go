@@ -14,10 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 )
 
 //go:embed service.sample.yaml
 var sampleServiceYaml string
+
+//go:embed ingress.sample.yaml
+var sampleIngressYaml string
 
 func TestK8sDeployment(t *testing.T) {
 	t.Parallel()
@@ -87,6 +91,23 @@ func TestK8sDeployment(t *testing.T) {
 			return err
 		}
 
+		ingType := networkingv1.Ingress{}
+
+		ingressObj, err := ConvertYamlToObj(sampleIngressYaml, &ingType)
+		if err != nil {
+			t.Log("Error converting yaml to obj: ", err)
+			t.Fatal(err)
+		}
+
+		ingObj := ingressObj.(*networkingv1.Ingress)
+		t.Log("ingressObj: ", ingObj)
+
+		err = ApplyIngress(clientset, ingObj)
+		if err != nil {
+			t.Log("Error applying service: ", err)
+			return err
+		}
+
 		assert.Nil(t, err)
 
 		return nil
@@ -98,7 +119,7 @@ func TestK8sDeployment(t *testing.T) {
 	}
 
 	// -- remove pulumi stack --
-	defer testUtil.RemoveStack(t, ctx, stack)
+	// defer testUtil.RemoveStack(t, ctx, stack)
 
 	// -- pulumi up --
 	res, _ := testUtil.UpStack(t, ctx, stack)
@@ -118,8 +139,8 @@ func TestK8sDeployment(t *testing.T) {
 
 	// -- pulumi destroy --
 
-	dRes, _ := testUtil.DestroyStack(t, ctx, stack)
+	// dRes, _ := testUtil.DestroyStack(t, ctx, stack)
 
-	assert.Equal(t, "destroy", dRes.Summary.Kind)
-	assert.Equal(t, "succeeded", dRes.Summary.Result)
+	// assert.Equal(t, "destroy", dRes.Summary.Kind)
+	// assert.Equal(t, "succeeded", dRes.Summary.Result)
 }

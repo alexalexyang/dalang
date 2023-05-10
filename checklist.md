@@ -44,8 +44,16 @@
   - [ ] Server
   - [x] Agent
 
-- Deployment test
+- App test
   - [x] Integration tests, positive cases only
+  - [x] Sample deployment
+    - [x] Manually try port-forwarding
+  - [x] Sample service
+    - [x] Manually try port-forwarding
+  - [x] Ingress
+  - [ ] Ingress controller
+  - [ ] Ingress class
+  - [ ] Load balancer
 
 ## GUI
 

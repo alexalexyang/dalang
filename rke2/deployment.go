@@ -4,6 +4,7 @@ import (
 	"context"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 
@@ -42,6 +43,23 @@ func ApplyService(clientset *kubernetes.Clientset, svcObj *apiv1.Service) error 
 	}
 
 	log.Printf("Created service %q.\n", result.GetObjectMeta().GetName())
+
+	return nil
+}
+
+func ApplyIngress(clientset *kubernetes.Clientset, ingObj *networkingv1.Ingress) error {
+
+	client := clientset.NetworkingV1().Ingresses(apiv1.NamespaceDefault)
+
+	log.Println("Creating ingress")
+
+	result, err := client.Create(context.TODO(), ingObj, metav1.CreateOptions{})
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Printf("Created ingress %q.\n", result.GetObjectMeta().GetName())
 
 	return nil
 }
