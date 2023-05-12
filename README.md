@@ -44,13 +44,27 @@ rke2/sample-deployment.yaml:
 `GO_ENV` environment variable: if set to `development`, will write the private key to file so we can manually log into the deployed server.
 
 
-## Notes
+## Notes on Pulumi
 
 `pulumi.Run` requires doing `pulumi up` on CLI. For programmatic stuff, use the [automation API](https://www.pulumi.com/docs/guides/automation-api/).
 
 [Set state checkpoints path](https://www.pulumi.com/docs/reference/cli/pulumi_login/): if this is not done, we get error `pulumi_access_token must be set for login during non-interactive cli sessions`
 
 [Use `file://<fs-path>` to specify storage for local back end](https://www.pulumi.com/docs/intro/concepts/state/#using-a-self-managed-backend)
+
+## Note on VPS providers
+
+I've used Hetzner in this project. But, long story short, whenever I ask them questions their replies are really rude and dismissive, and they also ignore my questions. Apparently, they're famous for this. Their policies are also misleading. For instance, their site says we can ask for limits to be raised after a month with them and paying our first invoice, but that’s not true.
+
+I got concerned because my company has used them for client projects. I'm not comfortable recommending Hetzner to clients if the platform is a blocker we can't resolve. So, I finally asked my colleagues to recommend alternatives and they sent these two links:
+
+[European cloud platforms](https://european-alternatives.eu/category/cloud-computing-platforms)
+
+[European VPS hosts](https://european-alternatives.eu/category/vps-virtual-private-server-hosters)
+
+A few colleagues add that Scaleway is not recommended. Seems like people haven't been happy with the way they bring up servers. I don't have details in this area, but I've used them a little in the last year and their documentation is really not great. You should research them more before deciding.
+
+A few colleagues say that OVHcloud is pretty good. I haven't tried them. But when I finally get time to refactor Hetzner out of the picture, I'll try them.
 
 ## References
 

@@ -100,7 +100,6 @@ func TestK8sDeployment(t *testing.T) {
 		}
 
 		ingObj := ingressObj.(*networkingv1.Ingress)
-		t.Log("ingressObj: ", ingObj)
 
 		err = ApplyIngress(clientset, ingObj)
 		if err != nil {
