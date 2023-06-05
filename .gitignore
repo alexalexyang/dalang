@@ -1,5 +1,8 @@
 **/*secret*.yaml
 
+**/*dev*.yaml
+**/*dev-*
+
 **/.pulumi
 **/pulumi-backend
 
@@ -8,3 +11,5 @@
 app
 
 notes.md
+
+**/.DS_Store

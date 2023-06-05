@@ -42,7 +42,7 @@ func CreateSSHKey(ctx *pulumi.Context) (*SSHKeyPair, error) {
 	if os.Getenv("GO_ENV") == "development" {
 		_ = keyPair.Private.ApplyT(func(key string) string {
 			wd, _ := os.Getwd()
-			_ = os.WriteFile(filepath.Join(wd, "hetzner-private-key"), []byte(key), 0644)
+			_ = os.WriteFile(filepath.Join(wd, "hetzner-private-key"), []byte(key), 0600)
 
 			return key
 		})

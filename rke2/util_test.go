@@ -107,7 +107,7 @@ func TestGetKubeConfig(t *testing.T) {
 		return nil
 	}
 
-	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
+	stack, err := auto.UpsertStackInlineSource(ctx, stackName, config.Config.ProjectName, deployFunc, opts...)
 	if err != nil {
 		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}

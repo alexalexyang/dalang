@@ -1,12 +1,15 @@
-package rke2
+package k8s
 
 import (
 	"context"
 	"dalang/config"
+	rke2 "dalang/rke2"
 	_ "dalang/setup"
 	testUtil "dalang/test/test-util"
 	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
@@ -16,6 +19,9 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 )
+
+//go:embed deployment.sample.yaml
+var sampleDeploymentYaml string
 
 //go:embed service.sample.yaml
 var sampleServiceYaml string
@@ -36,12 +42,15 @@ func TestK8sDeployment(t *testing.T) {
 	numHosts := numServers + numAgents
 
 	deployFunc := func(ctx *pulumi.Context) error {
-		firstHostRes, firstHostConnArgs, serverIp, _, err := DeployHighAvailability(ctx, numServers, numAgents)
+		t.Log("Deploying high availability RKE2")
+
+		firstHostRes, firstHostConnArgs, serverIp, _, err := rke2.DeployHighAvailability(ctx, numServers, numAgents)
 		if err != nil {
 			t.Fatal("Error setting up high availability RKE2: ", err)
 		}
 
-		kubeconfigRaw, err := GetKubeConfig(ctx, firstHostConnArgs, firstHostRes)
+		t.Log("Getting kubeconfig")
+		kubeconfigRaw, err := rke2.GetKubeConfig(ctx, firstHostConnArgs, firstHostRes)
 		if err != nil {
 			t.Log("Error getting kubeconfig: ", err)
 			return err
@@ -49,9 +58,14 @@ func TestK8sDeployment(t *testing.T) {
 
 		assert.NotEmpty(t, *kubeconfigRaw)
 
-		kubeconfig := UpdateKubeConfigServerIP(*kubeconfigRaw, *serverIp)
+		kubeconfig := rke2.UpdateKubeConfigServerIP(*kubeconfigRaw, *serverIp)
 
-		clientset, err := GetClientSet(kubeconfig)
+		cwd, _ := os.Getwd()
+		if os.Getenv("GO_ENV") == "development" {
+			_ = os.WriteFile(filepath.Join(cwd, "kubeconfig.dev.yaml"), []byte(kubeconfig), 0644)
+		}
+
+		clientset, err := rke2.GetClientSet(kubeconfig)
 		if err != nil {
 			t.Log("Error getting clientset: ", err)
 			return err
@@ -59,7 +73,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		depType := appsv1.Deployment{}
 
-		deploymentObj, err := ConvertYamlToObj(sampleDeploymentYaml, &depType)
+		deploymentObj, err := rke2.ConvertYamlToObj(sampleDeploymentYaml, &depType)
 		if err != nil {
 			t.Log("Error converting yaml to obj: ", err)
 			t.Fatal(err)
@@ -67,6 +81,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		depObj := deploymentObj.(*appsv1.Deployment)
 
+		t.Log("Applying sample deployment")
 		err = ApplyDeployment(clientset, depObj)
 		if err != nil {
 			t.Log("Error applying deployment: ", err)
@@ -77,7 +92,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		svcType := apiv1.Service{}
 
-		serviceObj, err := ConvertYamlToObj(sampleServiceYaml, &svcType)
+		serviceObj, err := rke2.ConvertYamlToObj(sampleServiceYaml, &svcType)
 		if err != nil {
 			t.Log("Error converting yaml to obj: ", err)
 			t.Fatal(err)
@@ -85,6 +100,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		svcObj := serviceObj.(*apiv1.Service)
 
+		t.Log("Applying sample service")
 		err = ApplyService(clientset, svcObj)
 		if err != nil {
 			t.Log("Error applying service: ", err)
@@ -93,7 +109,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		ingType := networkingv1.Ingress{}
 
-		ingressObj, err := ConvertYamlToObj(sampleIngressYaml, &ingType)
+		ingressObj, err := rke2.ConvertYamlToObj(sampleIngressYaml, &ingType)
 		if err != nil {
 			t.Log("Error converting yaml to obj: ", err)
 			t.Fatal(err)
@@ -101,6 +117,7 @@ func TestK8sDeployment(t *testing.T) {
 
 		ingObj := ingressObj.(*networkingv1.Ingress)
 
+		t.Log("Applying sample ingress")
 		err = ApplyIngress(clientset, ingObj)
 		if err != nil {
 			t.Log("Error applying service: ", err)
@@ -109,10 +126,17 @@ func TestK8sDeployment(t *testing.T) {
 
 		assert.Nil(t, err)
 
+		// The docs don't say where it is, but I found the tgz archive here: https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
+		// It turns out, we don't have to install an ingress controller because it's installed by default with RKE2
+
+		// ingressControllerFilepath := filepath.Join(cwd, "nginx-ingress-controller", "ingress-nginx-4.7.0.tgz")
+
+		// InstallChart(ingressControllerFilepath, "nginx-ingress-controller", "ingress-nginx", &kubeconfig)
+
 		return nil
 	}
 
-	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
+	stack, err := auto.UpsertStackInlineSource(ctx, stackName, config.Config.ProjectName, deployFunc, opts...)
 	if err != nil {
 		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}

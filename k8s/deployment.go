@@ -1,4 +1,4 @@
-package rke2
+package k8s
 
 import (
 	"context"

@@ -31,8 +31,6 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-var projectName = "test-project"
-
 func TestInstallRke2Server(t *testing.T) {
 	t.Parallel()
 
@@ -87,7 +85,7 @@ func TestInstallRke2Server(t *testing.T) {
 		return nil
 	}
 
-	stack, err := auto.UpsertStackInlineSource(ctx, stackName, projectName, deployFunc, opts...)
+	stack, err := auto.UpsertStackInlineSource(ctx, stackName, config.Config.ProjectName, deployFunc, opts...)
 	if err != nil {
 		t.Fatal("Error with UpsertStackInlineSource: ", err)
 	}

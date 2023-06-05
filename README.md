@@ -44,6 +44,12 @@ rke2/sample-deployment.yaml:
 `GO_ENV` environment variable: if set to `development`, will write the private key to file so we can manually log into the deployed server.
 
 
+## Run a specific test
+
+`clear && go clean -testcache && go test -v -run TestUploadSSHKey ./...`
+
+All tests are integration tests. It's better to run a specific test than all of them at once since we might hit limits on our VPS provider for now.
+
 ## Notes on Pulumi
 
 `pulumi.Run` requires doing `pulumi up` on CLI. For programmatic stuff, use the [automation API](https://www.pulumi.com/docs/guides/automation-api/).
@@ -52,11 +58,17 @@ rke2/sample-deployment.yaml:
 
 [Use `file://<fs-path>` to specify storage for local back end](https://www.pulumi.com/docs/intro/concepts/state/#using-a-self-managed-backend)
 
+## Notes on provisioning the k8s cluster
+
+Currently, the k8s package in this project uses the client-go and helm packages to install things (e.g.: Nginx ingress controller) in the cluster. This means Pulumi is unaware of the Kubernetes state. We can use Pulumi to do installations instead.
+
+Not sure yet what happens when we use FluxCD.
+
 ## Note on VPS providers
 
 I've used Hetzner in this project. But, long story short, whenever I ask them questions their replies are really rude and dismissive, and they also ignore my questions. Apparently, they're famous for this. Their policies are also misleading. For instance, their site says we can ask for limits to be raised after a month with them and paying our first invoice, but that’s not true.
 
-I got concerned because my company has used them for client projects. I'm not comfortable recommending Hetzner to clients if the platform is a blocker we can't resolve. So, I finally asked my colleagues to recommend alternatives and they sent these two links:
+I got concerned because my company has used them for client projects. I'm not comfortable recommending Hetzner to clients if the platform is a blocker we can't resolve. Sad, because their product is so great 😔. So, I finally asked my colleagues to recommend alternatives and they sent these two links:
 
 [European cloud platforms](https://european-alternatives.eu/category/cloud-computing-platforms)
 
@@ -65,6 +77,10 @@ I got concerned because my company has used them for client projects. I'm not co
 A few colleagues add that Scaleway is not recommended. Seems like people haven't been happy with the way they bring up servers. I don't have details in this area, but I've used them a little in the last year and their documentation is really not great. You should research them more before deciding.
 
 A few colleagues say that OVHcloud is pretty good. I haven't tried them. But when I finally get time to refactor Hetzner out of the picture, I'll try them.
+
+## Notes in general
+
+There are two Nginx ingress controllers. One by Nginx and the other [by the k8s community](https://kubernetes.github.io/ingress-nginx/).
 
 ## References
 

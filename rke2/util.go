@@ -38,6 +38,7 @@ func GetKubeConfig(ctx *pulumi.Context, connection *remote.ConnectionArgs, depen
 	return &kubeconfig, nil
 }
 
+// Replace localhost with server IP
 func UpdateKubeConfigServerIP(kubeconfig string, serverIP string) string {
 	return strings.Replace(kubeconfig, "server: https://127.0.0.1:", fmt.Sprintf("server: https://%s:", serverIP), 1)
 }
